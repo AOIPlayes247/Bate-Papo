@@ -24,6 +24,8 @@ input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--lin
 .btn.on{background:var(--green);border-color:var(--green);color:#04210f}
 .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.diag{font-size:13px;color:var(--muted);margin:0 0 12px;display:grid;gap:3px}
+.diag .ok{color:var(--green)}.diag .bad{color:var(--red)}
 .err{min-height:20px;color:var(--red);margin:12px 0 0;font-size:14px}
 #app{height:100%;display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto auto 1fr;grid-template-areas:"top top" "tabs tabs" "stage chat"}
 #tabs{grid-area:tabs;display:flex;gap:6px;padding:6px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
@@ -94,9 +96,11 @@ input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--lin
     <input id="name" maxlength="20" autocomplete="off" placeholder="Ex.: Ana">
     <label for="room">Porta (senha da sala)</label>
     <input id="room" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ex.: 124">
-    <div class="row">
-      <button class="btn primary" id="bHost">Criar sala</button>
-      <button class="btn" id="bJoin">Entrar na sala</button>
+    <button class="btn primary" id="bQuick" style="width:100%;margin-top:16px">⚡ Entrar rápido</button>
+    <p class="sub" style="margin:8px 0 0;font-size:13px">Entra na sala se ela existir; se não existir, cria na hora.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="bHost">Só criar sala</button>
+      <button class="btn" id="bJoin">Só entrar</button>
     </div>
     <p class="err" id="err" role="alert"></p>
   </div>
@@ -106,6 +110,7 @@ input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--lin
   <div class="card">
     <h1 id="wTitle">Aguardando…</h1>
     <p class="sub" id="wText"></p>
+    <div class="diag" id="diag"></div>
     <input id="wLink" readonly hidden>
     <div class="row"><button class="btn" id="bCopy" hidden>Copiar link</button><button class="btn" id="bCancel">Cancelar</button></div>
     <p class="err" id="wErr" role="alert"></p>
@@ -182,18 +187,41 @@ input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--lin
 'use strict';
 const $ = id => document.getElementById(id);
 const PREFIX = 'sala-voz-chat-gh1-', MAX = 4;
-const S = { peer: null, role: '', code: '', name: '', conns: new Map(),
+const S = { auto: 0, peer: null, role: '', code: '', name: '', conns: new Map(),
   calls: { mic: new Map(), screen: new Map() }, streams: { mic: null, screen: null },
   remote: { mic: new Set(), screen: new Set() } };
 
+const ICE = { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
+  { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+  { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
+] };
+const PEER_OPTS = { config: ICE, debug: 0 };
+function dg(text, cls){ const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = text; $('diag').appendChild(d); }
+function errMsg(t){
+  const m = {
+    network: 'Sem acesso ao servidor online. Sua rede (escola, trabalho, VPN ou antivírus) pode estar bloqueando.',
+    'server-error': 'O servidor online está com problema. Tente de novo em alguns minutos.',
+    'socket-error': 'A conexão com o servidor falhou. Verifique a internet.',
+    'socket-closed': 'A conexão com o servidor caiu. Tente de novo.',
+    webrtc: 'Falha na conexão direta entre os aparelhos (a rede está bloqueando).',
+    'browser-incompatible': 'Este navegador não suporta chamadas em tempo real. Use Chrome ou Edge.',
+    'ssl-unavailable': 'O servidor exige HTTPS. Abra o site pelo endereço github.io.',
+    'invalid-id': 'Porta inválida. Use só letras e números.'
+  };
+  return m[t] || ('Erro de conexão (' + t + ').');
+}
 function show(id){ ['join','wait','app'].forEach(x => $(x).hidden = x !== id); $('credTab').hidden = $('testTab').hidden = id === 'app'; }
 function readForm(){
   S.name = $('name').value.trim() || 'Convidado';
+  $('err').style.color = '';
   const code = $('room').value.toLowerCase().replace(/[^a-z0-9]/g, '');
   $('room').value = code;
   if (code.length < 3){ $('err').textContent = 'Digite uma porta com pelo menos 3 letras ou números.'; return null; }
   if (typeof window.Peer !== 'function'){ $('err').textContent = 'A biblioteca online não carregou. Recarregue a página.'; return null; }
-  $('err').textContent = ''; S.code = code; return code;
+  $('err').textContent = ''; S.code = code;
+  try { localStorage.setItem('sala_name', S.name); localStorage.setItem('sala_room', code); } catch (e) {}
+  return code;
 }
 function waitErr(msg){
   cleanup(); show('wait'); $('wErr').textContent = msg; $('wText').textContent = '';
@@ -207,7 +235,8 @@ function cleanup(){
   try { p && p.destroy(); } catch (x) {}
   for (const k of ['mic','screen']) for (const id of [...S.remote[k]]) detach(k, id);
 }
-function goJoin(){ cleanup(); show('join'); $('log').innerHTML = ''; $('wErr').textContent = ''; boardClear(false); setTab('telas'); }
+function autoStep(){ if (S.auto > 0){ S.auto--; return true; } return false; }
+function goJoin(){ S.auto = 0;  cleanup(); show('join'); $('log').innerHTML = ''; $('wErr').textContent = ''; boardClear(false); setTab('telas'); }
 
 /* Conexão em malha: o anfitrião apresenta quem já está na sala */
 function setup(role){
@@ -215,11 +244,13 @@ function setup(role){
   S.role = role; show('wait'); $('wErr').textContent = ''; $('wTitle').textContent = 'Sala ' + code;
   $('wText').textContent = role === 'host' ? 'Criando sala…' : 'Conectando…'; $('wLink').hidden = $('bCopy').hidden = true;
   let p;
-  try { p = role === 'host' ? new Peer(PREFIX + code) : new Peer(); } catch (e) { waitErr('Não foi possível iniciar a conexão.'); return null; }
+  try { p = role === 'host' ? new Peer(PREFIX + code, PEER_OPTS) : new Peer(undefined, PEER_OPTS); } catch (e) { waitErr('Não foi possível iniciar a conexão.'); return null; }
   S.peer = p;
+  $('diag').innerHTML = ''; dg('✔ Biblioteca online carregada', 'ok'); dg('… Conectando ao servidor online');
   p.on('disconnected', () => { try { if (S.peer === p && !p.destroyed) p.reconnect(); } catch (e) {} });
   p.on('connection', c => {
     if (S.conns.has(c.peer)){ c.close(); return; }
+    if (!$('wait').hidden) dg('… Alguém está tentando entrar');
     if (S.conns.size >= MAX - 1){
       c.on('open', () => { try { c.send({ t: 'full' }); } catch (e) {} setTimeout(() => c.close(), 400); });
       return;
@@ -239,25 +270,33 @@ function host(){
   let opened = false;
   const to = setTimeout(() => { if (!opened && S.peer === p) waitErr('O servidor não respondeu. Tente de novo.'); }, 15000);
   p.on('open', () => {
-    opened = true; clearTimeout(to);
+    opened = true; clearTimeout(to); dg('✔ Servidor respondeu. Sala criada', 'ok');
     $('wText').textContent = 'Sala pronta. Envie o link abaixo (até 3 amigos) e aguarde.';
     $('wLink').value = location.origin + location.pathname + '?sala=' + encodeURIComponent(S.code);
     $('wLink').hidden = $('bCopy').hidden = false;
   });
   p.on('error', err => {
     clearTimeout(to); if (S.peer !== p) return;
-    if (err.type === 'unavailable-id') waitErr('Essa porta já está em uso. Escolha outra ou espere uns 10 segundos.');
-    else if (!S.conns.size) waitErr('Erro de conexão (' + err.type + ').');
+    if (err.type === 'unavailable-id'){ if (autoStep()){ cleanup(); join(); } else waitErr('Essa porta já está em uso. Escolha outra ou espere uns 10 segundos.'); }
+    else if (!S.conns.size) waitErr(errMsg(err.type));
   });
 }
 function join(){
   const p = setup('guest'); if (!p) return;
-  const to = setTimeout(() => { if (S.peer === p && !openCount()) waitErr('Não foi possível conectar. Confira a porta e se a sala já foi criada.'); }, 20000);
-  p.on('open', () => { const c = p.connect(PREFIX + S.code, { reliable: true, serialization: 'json' }); wireConn(c); c.on('open', () => clearTimeout(to)); });
+  let sig = false;
+  const to = setTimeout(() => {
+    if (S.peer === p && !openCount()) waitErr(sig
+      ? 'Chegou ao servidor, mas não conseguiu ligar com o anfitrião. Confira se ele ainda está na tela "Sala pronta", teste outra rede (ex.: dados móveis) e desligue VPN.'
+      : 'O servidor online não respondeu. Tente de novo.');
+  }, 15000);
+  p.on('open', () => {
+    sig = true; dg('✔ Servidor respondeu', 'ok'); dg('… Procurando a sala ' + S.code);
+    const c = p.connect(PREFIX + S.code, { reliable: true, serialization: 'json' }); wireConn(c); c.on('open', () => clearTimeout(to));
+  });
   p.on('error', err => {
     clearTimeout(to); if (S.peer !== p) return;
-    if (err.type === 'peer-unavailable' && !openCount()) waitErr('Sala não encontrada. Peça para o anfitrião criar a sala primeiro.');
-    else if (!openCount()) waitErr('Erro de conexão (' + err.type + ').');
+    if (err.type === 'peer-unavailable' && !openCount()){ if (autoStep()){ cleanup(); host(); } else waitErr('Sala não encontrada. Peça para o anfitrião criar a sala primeiro.'); }
+    else if (!openCount()) waitErr(errMsg(err.type));
   });
 }
 const openCount = () => [...S.conns.values()].filter(e => e.open).length;
@@ -266,13 +305,18 @@ function wireConn(c){
   const id = c.peer, e = { c, name: 'Amigo', open: false };
   S.conns.set(id, e);
   const open = () => {
-    e.open = true; show('app');
+    e.open = true; if (!$('wait').hidden) dg('✔ Conectado!', 'ok'); show('app');
     try { c.send({ t: 'hello', name: S.name }); } catch (x) {}
     if (S.role === 'host') try { c.send({ t: 'peers', list: [...S.conns].filter(([k, v]) => k !== id && v.open).map(([k]) => k) }); } catch (x) {}
     for (const k of ['mic','screen']) if (S.streams[k]) callPeer(k, id);
     if (S.role === 'host') sendBoard(c);
     updStatus();
   };
+  c.on('iceStateChanged', st => {
+    if (e.open) return;
+    if (!$('wait').hidden) dg('Rede: ' + st, st === 'failed' ? 'bad' : '');
+    if (st === 'failed' && S.role === 'guest' && !openCount()) waitErr('Falha ao ligar direto com o anfitrião: a rede de um de vocês está bloqueando. Tente dados móveis ou outra rede, e sem VPN.');
+  });
   if (c.open) open(); else c.on('open', open);
   c.on('data', m => {
     if (!m) return;
@@ -557,16 +601,24 @@ $('test').addEventListener('click', e => { if (e.target === $('test')) closeTest
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('test').hidden) closeTest(); });
 $('bLeave').onclick = goJoin;
 $('bCancel').onclick = goJoin;
-$('bHost').onclick = host;
-$('bJoin').onclick = join;
-$('room').addEventListener('keydown', e => { if (e.key === 'Enter') join(); });
+function quick(){ S.auto = 3; join(); }
+$('bQuick').onclick = quick;
+$('bHost').onclick = () => { S.auto = 0; host(); };
+$('bJoin').onclick = () => { S.auto = 0; join(); };
+$('room').addEventListener('keydown', e => { if (e.key === 'Enter') quick(); });
+$('name').addEventListener('keydown', e => { if (e.key === 'Enter') $('room').focus(); });
 $('bCopy').onclick = async () => {
   try { await navigator.clipboard.writeText($('wLink').value); $('bCopy').textContent = 'Link copiado!'; } catch (e) { $('wLink').select(); }
   setTimeout(() => $('bCopy').textContent = 'Copiar link', 1800);
 };
 try {
   const q = new URLSearchParams(location.search).get('sala');
+  const sn = localStorage.getItem('sala_name'), sr = localStorage.getItem('sala_room');
+  if (sn) $('name').value = sn;
   if (q) $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, '');
+  else if (sr) $('room').value = sr;
+  if (q && sn) setTimeout(quick, 200);
+  else if (q){ $('err').style.color = 'var(--muted)'; $('err').textContent = 'Digite seu nome e clique em "Entrar rápido".'; $('name').focus(); }
 } catch (e) {}
 addEventListener('beforeunload', cleanup);
 })();
