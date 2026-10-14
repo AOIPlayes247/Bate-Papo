@@ -133,6 +133,13 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
     <input id="room" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ex.: 124">
     <button class="btn primary" id="bQuick" style="width:100%;margin-top:16px">⚡ Entrar rápido</button>
     <p class="sub" style="margin:8px 0 0;font-size:13px">Entra na sala se ela existir; se não existir, cria na hora.</p>
+    <section id="lastGroupPanel" hidden style="margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);text-align:left">
+      <p class="sub" style="font-size:12px;margin:0 0 4px">SEU ÚLTIMO GRUPO</p>
+      <strong id="lastGroupName">Grupo</strong>
+      <p class="sub" id="lastGroupInfo" style="font-size:12px;margin:4px 0 10px">Salvo neste navegador</p>
+      <button class="btn primary" id="continueGroup" style="width:100%">↩ Continuar no grupo</button>
+      <button class="btn" id="forgetGroup" style="width:100%;margin-top:6px">Esquecer este grupo</button>
+    </section>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="bHost">Só criar sala</button>
       <button class="btn" id="bJoin">Só entrar</button>
@@ -280,6 +287,22 @@ function errMsg(t){
   return m[t] || ('Erro de conexão (' + t + ').');
 }
 function show(id){ ['join','wait','app'].forEach(x => $(x).hidden = x !== id); $('credTab').hidden = $('testTab').hidden = id === 'app'; }
+function saveLastGroup(){
+  if (!S.code) return;
+  const item = { code: S.code, name: S.groupName || ('Sala ' + S.code), user: $('name').value.trim() || S.name || 'Convidado', savedAt: Date.now() };
+  try { localStorage.setItem('aoi_last_group', JSON.stringify(item)); } catch (e) {}
+  renderLastGroup();
+}
+function renderLastGroup(){
+  let item = null;
+  try { item = JSON.parse(localStorage.getItem('aoi_last_group') || 'null'); } catch(e) {}
+  const panel = $('lastGroupPanel');
+  if (!panel) return;
+  if (!item || !item.code) { panel.hidden = true; return; }
+  panel.hidden = false;
+  $('lastGroupName').textContent = item.name || ('Sala ' + item.code);
+  $('lastGroupInfo').textContent = 'Código: ' + item.code + ' · salvo neste navegador';
+}
 function readForm(){
   S.name = $('name').value.trim() || 'Convidado';
   $('err').style.color = '';
@@ -377,7 +400,7 @@ function wireConn(c){
   const id = c.peer, e = { c, name: 'Amigo', open: false };
   S.conns.set(id, e);
   const open = () => {
-    e.open = true; if (!$('wait').hidden) dg('✔ Conectado!', 'ok'); show('app'); updateGroupHeader();
+    e.open = true; if (!$('wait').hidden) dg('✔ Conectado!', 'ok'); saveLastGroup(); show('app'); updateGroupHeader();
     try { c.send({ t: 'hello', name: S.name }); } catch (x) {}
     if (S.role === 'host') try { c.send({ t: 'peers', list: [...S.conns].filter(([k, v]) => k !== id && v.open).map(([k]) => k) }); } catch (x) {}
     for (const k of ['mic','screen']) if (S.streams[k]) callPeer(k, id);
@@ -476,8 +499,8 @@ $('createGroup').onclick = () => {
   groups = groups.filter(g => g && g.code !== code);
   groups.unshift({name, code});
   try { localStorage.setItem('aoi_groups', JSON.stringify(groups.slice(0,30))); } catch(e) {}
-  S.groupName = name; $('room').value = code; $('name').value = $('name').value || 'Convidado';
-  loadGroups(); S.auto = 0; host();
+  S.groupName = name; S.code = code; $('room').value = code; $('name').value = $('name').value || 'Convidado';
+  saveLastGroup(); loadGroups(); S.auto = 0; host();
 };
 $('groupName').addEventListener('keydown', e => { if (e.key === 'Enter') $('createGroup').click(); });
 
@@ -722,6 +745,20 @@ $('test').addEventListener('click', e => { if (e.target === $('test')) closeTest
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('test').hidden) closeTest(); });
 $('bLeave').onclick = goJoin;
 $('bCancel').onclick = goJoin;
+$('continueGroup').onclick = () => {
+  let item = null;
+  try { item = JSON.parse(localStorage.getItem('aoi_last_group') || 'null'); } catch(e) {}
+  if (!item || !item.code) { renderLastGroup(); return; }
+  S.groupName = item.name || ('Sala ' + item.code);
+  $('room').value = item.code;
+  $('name').value = item.user || localStorage.getItem('sala_name') || '';
+  S.auto = 0;
+  join();
+};
+$('forgetGroup').onclick = () => {
+  try { localStorage.removeItem('aoi_last_group'); } catch(e) {}
+  renderLastGroup();
+};
 function quick(){ S.auto = 3; join(); }
 $('bQuick').onclick = quick;
 $('bHost').onclick = () => { S.auto = 0; host(); };
@@ -736,6 +773,7 @@ try {
   const params = new URLSearchParams(location.search); const q = params.get('sala'); const group = params.get('grupo');
   const sn = localStorage.getItem('sala_name'), sr = localStorage.getItem('sala_room');
   if (sn) $('name').value = sn;
+  renderLastGroup();
   if (q) $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, ''); if (group) S.groupName = group.slice(0,32);
   else if (sr) $('room').value = sr;
   if (q && sn) setTimeout(quick, 200);
