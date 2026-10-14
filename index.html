@@ -15,6 +15,22 @@ button,input{font:inherit;color:inherit}
 .center{min-height:100%;display:grid;place-items:center;padding:16px}
 .landingTabs{display:flex;gap:8px;margin:0 0 8px}.landingTabs .btn{flex:1}
 .savedGroups{display:grid;gap:8px;margin-top:14px}
+.sidebarGroups{display:grid;gap:4px;padding:0 8px 10px;max-height:42vh;overflow:auto}
+.sidebarGroup{width:100%;display:flex;align-items:center;gap:8px;padding:8px;border:0;border-radius:6px;background:transparent;color:var(--muted);text-align:left;cursor:pointer;overflow:hidden}
+.sidebarGroup:hover,.sidebarGroup.active{background:#404249;color:var(--ink)}
+.sidebarGroup .sgIcon{display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:8px;background:var(--blue);color:white;font-weight:800}
+.sidebarGroup .sgName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.sidebarEmpty{padding:4px 8px 8px;color:var(--muted);font-size:11px}
+#friendPanel{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.72)}
+#friendPanel .card{width:min(440px,100%)}
+.friendRow{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;color:var(--muted);font-size:13px}
+.friendRow:hover{background:#404249;color:var(--ink)}
+.friendAvatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#5865f2;color:white;font-weight:800;flex-shrink:0}
+.friendName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friendRemove{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:3px 6px}
+.friendRemove:hover{color:#ed4245}
+#friendsList{display:grid;gap:2px;padding:0 8px 10px;max-height:30vh;overflow:auto}
+.friendMeta{padding:12px 14px;color:var(--muted);font-size:12px;text-transform:uppercase;font-weight:800;letter-spacing:.04em}
 .savedGroup{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px}
 .savedGroupInfo{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
 .savedGroupInfo strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -117,6 +133,44 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
  #top .grow{min-width:80px}
 }
 @media (max-width:480px){#top .testBtn,#top .cred{display:none}#top .btn{padding:8px;font-size:12px}#tabs{padding:6px;overflow:auto}.tabb{padding:7px 10px;white-space:nowrap}}
+
+/* AOI Call UI: layout inspirado em salas de voz e transmissão modernas */
+#app{grid-template-columns:64px 214px minmax(0,1fr) 286px;grid-template-rows:54px 42px minmax(0,1fr);grid-template-areas:"servers top top top" "servers groups tabs tabs" "servers groups stage chat";gap:0}
+#serverRail{background:#17181c;padding-top:12px;gap:9px}
+.serverIcon{background:#23252b;border-radius:14px;width:42px;height:42px}
+#groupSide{background:#202127;border-right:1px solid #303137}
+#groupSideHead{background:#202127;padding:16px 14px;border-bottom:1px solid #303137}
+#groupMeta,#friendsMeta{color:#a8aab3}
+#top{height:54px;box-sizing:border-box;background:#202127;border-bottom:1px solid #303137;padding:7px 12px;gap:8px;flex-wrap:nowrap}
+#callRoomTitle{font-weight:700;white-space:nowrap;padding-right:12px;border-right:1px solid #3a3b42}
+#top .btn{padding:8px 10px;border-radius:7px;white-space:nowrap;font-size:12px}
+#top .grow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tabs{height:42px;box-sizing:border-box;background:#202127;padding:5px 12px;border-bottom:1px solid #303137}
+.tabb{border:0;border-radius:6px;padding:7px 11px}
+#stage{background:#000;position:relative;display:flex;align-items:stretch;justify-content:center;padding:26px 24px 82px;box-sizing:border-box;overflow:hidden}
+.tile{background:#1f2226;border-radius:10px;overflow:hidden;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.tile video{object-fit:contain;background:#1f2226}
+.tile span{left:12px;bottom:12px;background:rgba(0,0,0,.68);padding:6px 10px;border-radius:6px}
+#ph{position:absolute;inset:0;display:grid;place-items:center;color:#aeb0b8}
+.stagePlaceholder{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:24px}
+.stageScreenIcon{font-size:44px;width:80px;height:64px;display:grid;place-items:center;background:#292c31;border-radius:12px;color:#aeb5c2}
+.stagePlaceholder strong{font-size:17px;color:#e5e7eb}
+.stagePlaceholder span{font-size:13px;color:#9ca3af}
+#callControls{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:3;padding:8px 12px;background:rgba(22,23,27,.88);border:1px solid rgba(255,255,255,.08);border-radius:18px;backdrop-filter:blur(10px)}
+.callControl{width:48px;height:48px;border:0;border-radius:50%;background:#34363d;color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center}
+.callControl:hover{background:#4a4d56}.callControl.active{background:#5865f2}.callControl.leave{background:#ed4245}.callControl.leave:hover{background:#c73538}
+#chat{background:#202127;border-left:1px solid #303137}
+#chatHead{background:#202127;border-bottom:1px solid #303137}
+#log{background:#202127}
+#form{background:#202127;border-top:1px solid #303137}
+#form input{background:#303238}
+@media(max-width:900px){
+ #app{grid-template-columns:52px minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"servers top" "servers groups" "servers tabs" "servers stage"}
+ #top{height:auto;flex-wrap:wrap}#callRoomTitle{display:none}
+ #stage{padding:14px 10px 78px;min-height:320px}
+ #callControls{gap:9px;bottom:10px}.callControl{width:42px;height:42px}
+}
+
 </style>
 </head>
 <body>
@@ -173,15 +227,20 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
   <aside id="serverRail" aria-label="Navegação">
     <button class="serverIcon active" title="AOI Chat" aria-label="AOI Chat">A</button>
     <button class="serverIcon" id="railGroups" title="Grupos" aria-label="Grupos">＋</button>
+    <button class="serverIcon" id="railFriends" title="Amigos" aria-label="Amigos">♙</button>
   </aside>
   <aside id="groupSide">
     <div id="groupSideHead">AOI Chat</div>
-    <div id="groupMeta">Canais de texto</div>
+    <div id="groupMeta">Seus grupos</div>
+    <div id="sidebarGroups" class="sidebarGroups"></div>
+    <div id="friendsMeta" class="friendMeta">Amigos <button id="addFriendInline" class="friendRemove" title="Adicionar amigo">＋</button></div>
+    <div id="friendsList"></div>
     <div class="channel active"># geral</div>
     <div class="channel"># voz-e-tela</div>
     <div class="groupFoot" id="groupFoot">Sala privada · convide seus amigos pelo link</div>
   </aside>
   <div id="top">
+    <span id="callRoomTitle">🔊 AOI Chat · Sala de voz</span>
     <button class="btn" id="bMic">🎤 Ligar microfone</button>
     <button class="btn" id="bScreen">🖥️ Compartilhar tela</button>
     <button class="btn" id="bFull">Tela cheia</button>
@@ -195,7 +254,7 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
     <button class="tabb" data-tab="board">✏️ Quadro</button>
     <button class="tabb" data-tab="chat" id="tabChat">💬 Chat</button>
   </div>
-  <div id="stage"><div id="ph">A tela compartilhada aparece aqui.</div></div>
+  <div id="stage"><div id="ph"><div class="stagePlaceholder"><div class="stageScreenIcon">▣</div><strong>Nenhuma transmissão ativa</strong><span>Quando alguém compartilhar a tela, ela aparecerá aqui.</span></div></div><div id="callControls"><button class="callControl" id="callMic" title="Microfone">🎙️</button><button class="callControl" id="callScreen" title="Compartilhar tela">▣</button><button class="callControl" id="callFull" title="Tela cheia">⛶</button><button class="callControl leave" id="callLeave" title="Sair da chamada">📞</button></div></div>
   <div id="board">
     <div id="bTools">
       <span id="bSw"></span>
@@ -235,6 +294,17 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
     <button class="btn primary" id="tClose" style="width:100%;margin-top:12px">Fechar</button>
   </div>
 </div>
+<div id="friendPanel" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-label="Adicionar amigo">
+    <h2 style="margin:0 0 6px">Adicionar amigo</h2>
+    <p class="sub" style="font-size:13px">Salve o nome de um amigo para encontrá-lo facilmente neste navegador.</p>
+    <label for="friendName">Nome do amigo</label>
+    <input id="friendName" maxlength="32" autocomplete="off" placeholder="Ex.: AoiPlayer">
+    <p class="err" id="friendErr" role="alert"></p>
+    <div class="row"><button class="btn" id="friendCancel">Cancelar</button><button class="btn primary" id="friendSave">Adicionar amigo</button></div>
+    <p class="sub" style="font-size:11px;margin:12px 0 0">Sem conta ou servidor, a amizade fica salva apenas neste navegador; isso não envia um pedido ao dispositivo do amigo.</p>
+  </div>
+</div>
 <div id="credits" hidden>
   <div class="card" role="dialog" aria-label="Créditos">
     <h1>Créditos</h1>
@@ -250,7 +320,7 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
 'use strict';
 const $ = id => document.getElementById(id);
 const PREFIX = 'sala-voz-chat-gh1-', MAX = 4;
-const S = { auto: 0, peer: null, role: '', code: '', name: '', groupName: '', conns: new Map(),
+const S = { auto: 0, invite: false, peer: null, role: '', code: '', name: '', groupName: '', conns: new Map(),
   calls: { mic: new Map(), screen: new Map() }, streams: { mic: null, screen: null },
   remote: { mic: new Set(), screen: new Set() } };
 
@@ -290,8 +360,16 @@ function show(id){ ['join','wait','app'].forEach(x => $(x).hidden = x !== id); $
 function saveLastGroup(){
   if (!S.code) return;
   const item = { code: S.code, name: S.groupName || ('Sala ' + S.code), user: $('name').value.trim() || S.name || 'Convidado', savedAt: Date.now() };
-  try { localStorage.setItem('aoi_last_group', JSON.stringify(item)); } catch (e) {}
+  try {
+    localStorage.setItem('aoi_last_group', JSON.stringify(item));
+    let groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]');
+    if (!Array.isArray(groups)) groups = [];
+    groups = groups.filter(g => g && String(g.code).toLowerCase() !== S.code.toLowerCase());
+    groups.unshift({ name: item.name, code: S.code });
+    localStorage.setItem('aoi_groups', JSON.stringify(groups.slice(0, 30)));
+  } catch (e) {}
   renderLastGroup();
+  renderSidebarGroups();
 }
 function renderLastGroup(){
   let item = null;
@@ -327,7 +405,7 @@ function cleanup(){
   for (const k of ['mic','screen']) for (const id of [...S.remote[k]]) detach(k, id);
 }
 function autoStep(){ if (S.auto > 0){ S.auto--; return true; } return false; }
-function goJoin(){ S.auto = 0;  cleanup(); show('join'); $('log').innerHTML = ''; $('wErr').textContent = ''; boardClear(false); setTab('telas'); }
+function goJoin(){ S.auto = 0; S.invite = false; cleanup(); show('join'); $('log').innerHTML = ''; $('wErr').textContent = ''; boardClear(false); setTab('telas'); }
 
 /* Conexão em malha: o anfitrião apresenta quem já está na sala */
 function setup(role){
@@ -363,7 +441,7 @@ function host(){
   p.on('open', () => {
     opened = true; clearTimeout(to); dg('✔ Servidor respondeu. Sala criada', 'ok');
     $('wText').textContent = 'Sala pronta. Envie o link abaixo (até 3 amigos) e aguarde.';
-    $('wLink').value = location.origin + location.pathname + '?sala=' + encodeURIComponent(S.code) + (S.groupName ? '&grupo=' + encodeURIComponent(S.groupName) : '');
+    $('wLink').value = location.origin + location.pathname + '?sala=' + encodeURIComponent(S.code) + (S.groupName ? '&grupo=' + encodeURIComponent(S.groupName) : '') + '&entrar=1';
     $('wLink').hidden = $('bCopy').hidden = false;
   });
   p.on('error', err => {
@@ -402,7 +480,12 @@ function wireConn(c){
   const open = () => {
     e.open = true; if (!$('wait').hidden) dg('✔ Conectado!', 'ok'); saveLastGroup(); show('app'); updateGroupHeader();
     try { c.send({ t: 'hello', name: S.name }); } catch (x) {}
-    if (S.role === 'host') try { c.send({ t: 'peers', list: [...S.conns].filter(([k, v]) => k !== id && v.open).map(([k]) => k) }); } catch (x) {}
+    // Anuncie os participantes a todos, não só ao convidado novo.
+    // Isso cria uma malha direta entre os participantes: a chamada existente
+    // entre amigos não depende de o criador continuar conectado.
+    const peerIds = [...S.conns].filter(([k, v]) => v.open && k !== (S.peer && S.peer.id)).map(([k]) => k);
+    try { c.send({ t: 'peers', list: peerIds.filter(pid => pid !== id) }); } catch (x) {}
+    broadcast({ t: 'peer-joined', id, list: peerIds.filter(pid => pid !== id) });
     for (const k of ['mic','screen']) if (S.streams[k]) callPeer(k, id);
     if (S.role === 'host') sendBoard(c);
     updStatus();
@@ -417,9 +500,10 @@ function wireConn(c){
     if (!m) return;
     if (m.t === 'chat'){ addMsg(e.name, String(m.text || ''), false); notify('chat'); }
     else if (m.t === 'hello'){ e.name = String(m.name || 'Amigo').slice(0, 20); sys(e.name + ' entrou.'); updStatus(); }
-    else if (m.t === 'peers' && Array.isArray(m.list)){
-      m.list.forEach(pid => {
-        if (pid === (S.peer && S.peer.id) || S.conns.has(pid) || S.conns.size >= MAX - 1 || !S.peer) return;
+    else if ((m.t === 'peers' || m.t === 'peer-joined') && Array.isArray(m.list)){
+      const ids = m.t === 'peer-joined' && m.id ? [...m.list, m.id] : m.list;
+      ids.forEach(pid => {
+        if (!pid || pid === (S.peer && S.peer.id) || S.conns.has(pid) || S.conns.size >= MAX - 1 || !S.peer) return;
         wireConn(S.peer.connect(pid, { reliable: true, serialization: 'json' }));
       });
     }
@@ -462,11 +546,42 @@ function updateGroupHeader(){
   $('groupFoot').textContent = 'Convide amigos pelo link da sala. Até ' + MAX + ' pessoas.';
   $('status').textContent = title + ' · ' + $('status').textContent.replace(/^Sala [^·]+ · /, '');
 }
+function renderSidebarGroups(){
+  const box = $('sidebarGroups');
+  if (!box) return;
+  let groups = [];
+  try { groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]'); } catch(e) {}
+  if (!Array.isArray(groups)) groups = [];
+  box.innerHTML = '';
+  if (!groups.length){
+    const empty = document.createElement('div'); empty.className = 'sidebarEmpty'; empty.textContent = 'Nenhum grupo salvo';
+    box.appendChild(empty); return;
+  }
+  groups.forEach(g => {
+    if (!g || !g.code) return;
+    const b = document.createElement('button');
+    b.className = 'sidebarGroup' + (String(g.code).toLowerCase() === String(S.code).toLowerCase() ? ' active' : '');
+    b.title = g.name || ('Sala ' + g.code);
+    const icon = document.createElement('span'); icon.className = 'sgIcon'; icon.textContent = (g.name || 'G').trim().slice(0,1).toUpperCase();
+    const name = document.createElement('span'); name.className = 'sgName'; name.textContent = g.name || ('Sala ' + g.code);
+    b.append(icon, name);
+    b.onclick = () => {
+      S.groupName = g.name || ('Sala ' + g.code);
+      S.invite = true; S.auto = 0;
+      $('name').value = $('name').value || localStorage.getItem('sala_name') || '';
+      $('room').value = g.code;
+      if (!$('name').value.trim()) { goJoin(); $('room').value = g.code; $('err').textContent = 'Digite seu nome para entrar neste grupo.'; $('name').focus(); return; }
+      cleanup();
+      join();
+    };
+    box.appendChild(b);
+  });
+}
 function loadGroups(){
   let groups = [];
   try { groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]'); } catch(e) {}
   if (!Array.isArray(groups)) groups = [];
-  const box = $('savedGroups'); box.innerHTML = '';
+  const box = $('savedGroups'); box.innerHTML = ''; renderSidebarGroups();
   if (!groups.length){ box.innerHTML = '<p class="sub" style="font-size:13px;margin-top:14px">Nenhum grupo criado ainda.</p>'; return; }
   groups.forEach(g => {
     const row = document.createElement('div'); row.className = 'savedGroup';
@@ -478,7 +593,7 @@ function loadGroups(){
     open.onclick = () => { S.groupName = g.name; $('name').value = $('name').value || 'Convidado'; $('room').value = g.code; S.auto = 3; quick(); };
     const copy = document.createElement('button'); copy.className = 'btn'; copy.textContent = 'Link';
     copy.onclick = async () => {
-      const url = location.origin + location.pathname + '?sala=' + encodeURIComponent(g.code) + '&grupo=' + encodeURIComponent(g.name);
+      const url = location.origin + location.pathname + '?sala=' + encodeURIComponent(g.code) + '&grupo=' + encodeURIComponent(g.name) + '&entrar=1';
       try { await navigator.clipboard.writeText(url); copy.textContent = 'Copiado!'; } catch(e) { prompt('Copie o convite:', url); }
       setTimeout(() => copy.textContent = 'Link', 1500);
     };
@@ -500,7 +615,7 @@ $('createGroup').onclick = () => {
   groups.unshift({name, code});
   try { localStorage.setItem('aoi_groups', JSON.stringify(groups.slice(0,30))); } catch(e) {}
   S.groupName = name; S.code = code; $('room').value = code; $('name').value = $('name').value || 'Convidado';
-  saveLastGroup(); loadGroups(); S.auto = 0; host();
+  saveLastGroup(); loadGroups(); renderSidebarGroups(); S.auto = 0; host();
 };
 $('groupName').addEventListener('keydown', e => { if (e.key === 'Enter') $('createGroup').click(); });
 
@@ -579,6 +694,7 @@ function updStatus(){
 }
 
 $('bMic').onclick = () => S.streams.mic ? stopLocal('mic', true) : startLocal('mic');
+$('callMic').onclick = () => $('bMic').click(); $('callScreen').onclick = () => $('bScreen').click(); $('callFull').onclick = () => $('bFull').click(); $('callLeave').onclick = () => $('bLeave').click();
 $('bScreen').onclick = () => S.streams.screen ? stopLocal('screen', true) : startLocal('screen');
 $('bFull').onclick = () => { const s = $('stage'); document.fullscreenElement ? document.exitFullscreen() : (s.requestFullscreen && s.requestFullscreen()); };
 document.querySelectorAll('.cred').forEach(b => b.onclick = () => { $('credits').hidden = false; });
@@ -741,6 +857,36 @@ function closeTest(){
 document.querySelectorAll('.testBtn').forEach(b => b.onclick = () => { $('test').hidden = false; });
 $('testTab').onclick = () => { $('test').hidden = false; };
 $('tScrBtn').onclick = testScreen; $('tCamBtn').onclick = testCam; $('tMicBtn').onclick = testMic; $('tSndBtn').onclick = testSound; $('tClose').onclick = closeTest;
+function getFriends(){
+  try { const f = JSON.parse(localStorage.getItem('aoi_friends') || '[]'); return Array.isArray(f) ? f.filter(x => typeof x === 'string') : []; } catch(e) { return []; }
+}
+function renderFriends(){
+  const box = $('friendsList'); if (!box) return;
+  const friends = getFriends(); box.innerHTML = '';
+  if (!friends.length){ const empty=document.createElement('div'); empty.className='sidebarEmpty'; empty.textContent='Nenhum amigo adicionado'; box.appendChild(empty); return; }
+  friends.forEach(name => {
+    const row=document.createElement('div'); row.className='friendRow';
+    const avatar=document.createElement('span'); avatar.className='friendAvatar'; avatar.textContent=name.trim().slice(0,1).toUpperCase();
+    const label=document.createElement('span'); label.className='friendName'; label.textContent=name;
+    const remove=document.createElement('button'); remove.className='friendRemove'; remove.title='Remover amigo'; remove.setAttribute('aria-label','Remover '+name); remove.textContent='×';
+    remove.onclick=()=>{ localStorage.setItem('aoi_friends', JSON.stringify(getFriends().filter(f=>f!==name))); renderFriends(); };
+    row.append(avatar,label,remove); box.appendChild(row);
+  });
+}
+function openFriendPanel(){ $('friendErr').textContent=''; $('friendName').value=''; $('friendPanel').hidden=false; $('friendName').focus(); }
+$('railFriends').onclick = openFriendPanel;
+$('addFriendInline').onclick = openFriendPanel;
+$('friendCancel').onclick = () => { $('friendPanel').hidden=true; };
+$('friendPanel').addEventListener('click', e => { if(e.target === $('friendPanel')) $('friendPanel').hidden=true; });
+$('friendSave').onclick = () => {
+  const name=$('friendName').value.trim().replace(/\s+/g,' ');
+  if(!name){ $('friendErr').textContent='Digite o nome do seu amigo.'; return; }
+  const friends=getFriends();
+  if(friends.some(f=>f.toLowerCase()===name.toLowerCase())){ $('friendErr').textContent='Esse amigo já está na sua lista.'; return; }
+  friends.push(name); localStorage.setItem('aoi_friends', JSON.stringify(friends.slice(0,200))); renderFriends(); $('friendPanel').hidden=true;
+};
+$('friendName').addEventListener('keydown', e => { if(e.key==='Enter') $('friendSave').click(); if(e.key==='Escape') $('friendPanel').hidden=true; });
+renderFriends();
 $('test').addEventListener('click', e => { if (e.target === $('test')) closeTest(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('test').hidden) closeTest(); });
 $('bLeave').onclick = goJoin;
@@ -752,14 +898,14 @@ $('continueGroup').onclick = () => {
   S.groupName = item.name || ('Sala ' + item.code);
   $('room').value = item.code;
   $('name').value = item.user || localStorage.getItem('sala_name') || '';
-  S.auto = 0;
+  S.invite = true; S.auto = 0;
   join();
 };
 $('forgetGroup').onclick = () => {
   try { localStorage.removeItem('aoi_last_group'); } catch(e) {}
   renderLastGroup();
 };
-function quick(){ S.auto = 3; join(); }
+function quick(){ S.auto = S.invite ? 0 : 3; join(); }
 $('bQuick').onclick = quick;
 $('bHost').onclick = () => { S.auto = 0; host(); };
 $('bJoin').onclick = () => { S.auto = 0; join(); };
@@ -773,11 +919,12 @@ try {
   const params = new URLSearchParams(location.search); const q = params.get('sala'); const group = params.get('grupo');
   const sn = localStorage.getItem('sala_name'), sr = localStorage.getItem('sala_room');
   if (sn) $('name').value = sn;
-  renderLastGroup();
-  if (q) $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, ''); if (group) S.groupName = group.slice(0,32);
+  renderLastGroup(); renderSidebarGroups();
+  if (q) { $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, ''); S.invite = true; $('bQuick').textContent = 'Entrar no grupo'; }
   else if (sr) $('room').value = sr;
-  if (q && sn) setTimeout(quick, 200);
-  else if (q){ $('err').style.color = 'var(--muted)'; $('err').textContent = 'Digite seu nome e clique em "Entrar rápido".'; $('name').focus(); }
+  if (group) S.groupName = group.slice(0,32);
+  if (q && sn) setTimeout(() => { S.auto = 0; join(); }, 200);
+  else if (q){ $('err').style.color = 'var(--muted)'; $('err').textContent = 'Digite seu nome e clique em "Entrar no grupo".'; $('name').focus(); }
 } catch (e) {}
 addEventListener('beforeunload', cleanup);
 })();
