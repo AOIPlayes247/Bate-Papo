@@ -179,7 +179,6 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
   <div class="card">
     <h1>AOI Chat</h1>
     <p class="sub">Converse por texto, voz e compartilhe sua tela com amigos.</p>
-    <div class="landingTabs"><button class="btn primary" id="landingEnter">Entrar em sala</button><button class="btn" id="landingGroups">Grupos</button></div>
     <section id="enterPanel">
     <label for="name">Seu nome</label>
     <input id="name" maxlength="20" autocomplete="off" placeholder="Ex.: Ana">
@@ -188,26 +187,17 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
     <button class="btn primary" id="bQuick" style="width:100%;margin-top:16px">⚡ Entrar rápido</button>
     <p class="sub" style="margin:8px 0 0;font-size:13px">Entra na sala se ela existir; se não existir, cria na hora.</p>
     <section id="lastGroupPanel" hidden style="margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);text-align:left">
-      <p class="sub" style="font-size:12px;margin:0 0 4px">SEU ÚLTIMO GRUPO</p>
-      <strong id="lastGroupName">Grupo</strong>
+      <p class="sub" style="font-size:12px;margin:0 0 4px">SUA ÚLTIMA SALA</p>
+      <strong id="lastGroupName">Sala</strong>
       <p class="sub" id="lastGroupInfo" style="font-size:12px;margin:4px 0 10px">Salvo neste navegador</p>
-      <button class="btn primary" id="continueGroup" style="width:100%">↩ Continuar no grupo</button>
-      <button class="btn" id="forgetGroup" style="width:100%;margin-top:6px">Esquecer este grupo</button>
+      <button class="btn primary" id="continueGroup" style="width:100%">↩ Continuar na sala</button>
+      <button class="btn" id="forgetGroup" style="width:100%;margin-top:6px">Esquecer esta sala</button>
     </section>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="bHost">Só criar sala</button>
       <button class="btn" id="bJoin">Só entrar</button>
     </div>
     <p class="err" id="err" role="alert"></p>
-    </section>
-    <section id="groupsPanel" hidden>
-      <h2 style="margin:18px 0 4px">Seus grupos</h2>
-      <p class="sub" style="font-size:13px;margin-bottom:10px">Crie um grupo e compartilhe o convite com seus amigos.</p>
-      <label for="groupName">Nome do grupo</label>
-      <input id="groupName" maxlength="32" placeholder="Ex.: Amigos do Minecraft">
-      <button class="btn primary" id="createGroup" style="width:100%;margin-top:12px">＋ Criar grupo</button>
-      <div id="savedGroups" class="savedGroups"></div>
-      <p class="sub" style="font-size:12px;margin:12px 0 0">A lista fica salva neste navegador. Para seus amigos entrarem, compartilhe o link de convite.</p>
     </section>
   </div>
 </div>
@@ -226,13 +216,10 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
 <div id="app" data-tab="telas" hidden>
   <aside id="serverRail" aria-label="Navegação">
     <button class="serverIcon active" title="AOI Chat" aria-label="AOI Chat">A</button>
-    <button class="serverIcon" id="railGroups" title="Grupos" aria-label="Grupos">＋</button>
     <button class="serverIcon" id="railFriends" title="Amigos" aria-label="Amigos">♙</button>
   </aside>
   <aside id="groupSide">
     <div id="groupSideHead">AOI Chat</div>
-    <div id="groupMeta">Seus grupos</div>
-    <div id="sidebarGroups" class="sidebarGroups"></div>
     <div id="friendsMeta" class="friendMeta">Amigos <button id="addFriendInline" class="friendRemove" title="Adicionar amigo">＋</button></div>
     <div id="friendsList"></div>
     <div class="channel active"># geral</div>
@@ -362,14 +349,8 @@ function saveLastGroup(){
   const item = { code: S.code, name: S.groupName || ('Sala ' + S.code), user: $('name').value.trim() || S.name || 'Convidado', savedAt: Date.now() };
   try {
     localStorage.setItem('aoi_last_group', JSON.stringify(item));
-    let groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]');
-    if (!Array.isArray(groups)) groups = [];
-    groups = groups.filter(g => g && String(g.code).toLowerCase() !== S.code.toLowerCase());
-    groups.unshift({ name: item.name, code: S.code });
-    localStorage.setItem('aoi_groups', JSON.stringify(groups.slice(0, 30)));
   } catch (e) {}
   renderLastGroup();
-  renderSidebarGroups();
 }
 function renderLastGroup(){
   let item = null;
@@ -557,79 +538,6 @@ function updateGroupHeader(){
   $('groupFoot').textContent = 'Convide amigos pelo link da sala. Até ' + MAX + ' pessoas.';
   $('status').textContent = title + ' · ' + $('status').textContent.replace(/^Sala [^·]+ · /, '');
 }
-function renderSidebarGroups(){
-  const box = $('sidebarGroups');
-  if (!box) return;
-  let groups = [];
-  try { groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]'); } catch(e) {}
-  if (!Array.isArray(groups)) groups = [];
-  box.innerHTML = '';
-  if (!groups.length){
-    const empty = document.createElement('div'); empty.className = 'sidebarEmpty'; empty.textContent = 'Nenhum grupo salvo';
-    box.appendChild(empty); return;
-  }
-  groups.forEach(g => {
-    if (!g || !g.code) return;
-    const b = document.createElement('button');
-    b.className = 'sidebarGroup' + (String(g.code).toLowerCase() === String(S.code).toLowerCase() ? ' active' : '');
-    b.title = g.name || ('Sala ' + g.code);
-    const icon = document.createElement('span'); icon.className = 'sgIcon'; icon.textContent = (g.name || 'G').trim().slice(0,1).toUpperCase();
-    const name = document.createElement('span'); name.className = 'sgName'; name.textContent = g.name || ('Sala ' + g.code);
-    b.append(icon, name);
-    b.onclick = () => {
-      S.groupName = g.name || ('Sala ' + g.code);
-      S.invite = true; S.auto = 0;
-      $('name').value = $('name').value || localStorage.getItem('sala_name') || '';
-      $('room').value = g.code;
-      if (!$('name').value.trim()) { goJoin(); $('room').value = g.code; $('err').textContent = 'Digite seu nome para entrar neste grupo.'; $('name').focus(); return; }
-      cleanup();
-      join();
-    };
-    box.appendChild(b);
-  });
-}
-function loadGroups(){
-  let groups = [];
-  try { groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]'); } catch(e) {}
-  if (!Array.isArray(groups)) groups = [];
-  const box = $('savedGroups'); box.innerHTML = ''; renderSidebarGroups();
-  if (!groups.length){ box.innerHTML = '<p class="sub" style="font-size:13px;margin-top:14px">Nenhum grupo criado ainda.</p>'; return; }
-  groups.forEach(g => {
-    const row = document.createElement('div'); row.className = 'savedGroup';
-    const info = document.createElement('div'); info.className = 'savedGroupInfo';
-    const name = document.createElement('strong'); name.textContent = g.name;
-    const code = document.createElement('small'); code.textContent = 'Código: ' + g.code;
-    info.append(name, code);
-    const open = document.createElement('button'); open.className = 'btn'; open.textContent = 'Abrir';
-    open.onclick = () => { S.groupName = g.name; $('name').value = $('name').value || 'Convidado'; $('room').value = g.code; S.auto = 3; quick(); };
-    const copy = document.createElement('button'); copy.className = 'btn'; copy.textContent = 'Link';
-    copy.onclick = async () => {
-      const url = location.origin + location.pathname + '?sala=' + encodeURIComponent(g.code) + '&grupo=' + encodeURIComponent(g.name) + '&entrar=1';
-      try { await navigator.clipboard.writeText(url); copy.textContent = 'Copiado!'; } catch(e) { prompt('Copie o convite:', url); }
-      setTimeout(() => copy.textContent = 'Link', 1500);
-    };
-    row.append(info, open, copy); box.appendChild(row);
-  });
-}
-$('landingEnter').onclick = () => { $('enterPanel').hidden = false; $('groupsPanel').hidden = true; $('landingEnter').classList.add('primary'); $('landingGroups').classList.remove('primary'); };
-$('landingGroups').onclick = () => { $('enterPanel').hidden = true; $('groupsPanel').hidden = false; $('landingGroups').classList.add('primary'); $('landingEnter').classList.remove('primary'); loadGroups(); };
-$('railGroups').onclick = () => { goJoin(); $('landingGroups').click(); };
-$('createGroup').onclick = () => {
-  const name = $('groupName').value.trim();
-  if (!name){ $('groupName').focus(); return; }
-  const base = name.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'').slice(0,8) || 'grupo';
-  const code = (base + Math.random().toString(36).slice(2,6)).slice(0,16);
-  let groups = [];
-  try { groups = JSON.parse(localStorage.getItem('aoi_groups') || '[]'); } catch(e) {}
-  if (!Array.isArray(groups)) groups = [];
-  groups = groups.filter(g => g && g.code !== code);
-  groups.unshift({name, code});
-  try { localStorage.setItem('aoi_groups', JSON.stringify(groups.slice(0,30))); } catch(e) {}
-  S.groupName = name; S.code = code; $('room').value = code; $('name').value = $('name').value || 'Convidado';
-  saveLastGroup(); loadGroups(); renderSidebarGroups(); S.auto = 0; host();
-};
-$('groupName').addEventListener('keydown', e => { if (e.key === 'Enter') $('createGroup').click(); });
-
 /* Mídia: cada recurso é uma chamada enviada a cada participante */
 function callPeer(kind, id){
   if (!S.peer || !S.streams[kind]) return;
@@ -644,8 +552,30 @@ async function startLocal(kind){
       st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     } else {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) return sys('Compartilhar tela só funciona em navegador de computador.');
-      st = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      // Pede vídeo + áudio do sistema/aba. No Chrome/Edge o usuário precisa marcar "Compartilhar áudio".
+      st = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          suppressLocalAudioPlayback: false
+        },
+        preferCurrentTab: false,
+        selfBrowserSurface: 'exclude',
+        systemAudio: 'include'
+      }).catch(async () => {
+        // Fallback para navegadores que não aceitam todas as opções
+        return navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      });
       st.getVideoTracks()[0].addEventListener('ended', () => stopLocal('screen', true));
+      // Garante que as faixas de áudio fiquem ativas
+      st.getAudioTracks().forEach(t => { t.enabled = true; });
+      if (!st.getAudioTracks().length) {
+        sys('Tela compartilhada, mas sem áudio do sistema. No seletor do navegador marque a opção "Compartilhar áudio".');
+      } else {
+        sys('Tela + áudio do sistema ativos. Os outros devem ouvir o som do PC.');
+      }
     }
     S.streams[kind] = st;
     S.conns.forEach((e, id) => { if (e.open) callPeer(kind, id); });
@@ -680,12 +610,30 @@ function attach(kind, id, st){
     if (!t){
       t = document.createElement('div'); t.className = 'tile'; t.id = 't-' + id;
       t.innerHTML = '<video autoplay playsinline></video><span></span>';
-      t.firstChild.onclick = () => { t.firstChild.muted = false; t.firstChild.play().catch(() => {}); };
+      t.firstChild.onclick = () => {
+        const vid = t.firstChild;
+        vid.muted = false;
+        vid.volume = 1;
+        vid.play().catch(() => {});
+      };
       $('stage').appendChild(t);
     }
-    t.lastChild.textContent = 'Tela de ' + name;
-    const v = t.firstChild; v.srcObject = st; v.muted = false;
-    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); sys('Toque no vídeo para ativar o som da tela.'); });
+    const hasAudio = st.getAudioTracks && st.getAudioTracks().length > 0;
+    t.lastChild.textContent = 'Tela de ' + name + (hasAudio ? ' 🔊' : '');
+    const v = t.firstChild;
+    // Ativa faixas de áudio da tela
+    if (st.getAudioTracks) st.getAudioTracks().forEach(tr => { tr.enabled = true; });
+    v.srcObject = st;
+    v.muted = false;
+    v.volume = 1;
+    v.play().then(() => {
+      // Conseguiu tocar com som
+    }).catch(() => {
+      // Política de autoplay: tenta mutado e avisa para clicar
+      v.muted = true;
+      v.play().catch(() => {});
+      sys('Toque no vídeo da tela para ativar o som (política do navegador).');
+    });
   }
   updStatus();
 }
@@ -930,12 +878,12 @@ try {
   const params = new URLSearchParams(location.search); const q = params.get('sala'); const group = params.get('grupo');
   const sn = localStorage.getItem('sala_name'), sr = localStorage.getItem('sala_room');
   if (sn) $('name').value = sn;
-  renderLastGroup(); renderSidebarGroups();
-  if (q) { $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, ''); S.invite = true; $('bQuick').textContent = 'Entrar no grupo'; }
+  renderLastGroup();
+  if (q) { $('room').value = q.toLowerCase().replace(/[^a-z0-9]/g, ''); S.invite = true; $('bQuick').textContent = 'Entrar na sala'; }
   else if (sr) $('room').value = sr;
   if (group) S.groupName = group.slice(0,32);
   if (q && sn) setTimeout(() => { S.auto = 0; join(); }, 200);
-  else if (q){ $('err').style.color = 'var(--muted)'; $('err').textContent = 'Digite seu nome e clique em "Entrar no grupo".'; $('name').focus(); }
+  else if (q){ $('err').style.color = 'var(--muted)'; $('err').textContent = 'Digite seu nome e clique em "Entrar na sala".'; $('name').focus(); }
 } catch (e) {}
 addEventListener('beforeunload', cleanup);
 })();
