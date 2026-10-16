@@ -239,7 +239,7 @@ input{width:100%;padding:11px 12px;border-radius:6px;border:1px solid var(--line
   <div id="tabs">
     <button class="tabb act" data-tab="telas">🖥️ Telas</button>
     <button class="tabb" data-tab="board">✏️ Quadro</button>
-    <button class="tabb" data-tab="chat" id="tabChat">💬 Chat</button>
+    <button class="tabb" data-tab="chat" id="tabChat">🌍 Chat</button>
   </div>
   <div id="stage"><div id="ph"><div class="stagePlaceholder"><div class="stageScreenIcon">▣</div><strong>Nenhuma transmissão ativa</strong><span>Quando alguém compartilhar a tela, ela aparecerá aqui.</span></div></div><div id="callControls"><button class="callControl" id="callMic" title="Microfone">🎙️</button><button class="callControl" id="callScreen" title="Compartilhar tela">▣</button><button class="callControl" id="callFull" title="Tela cheia">⛶</button><button class="callControl leave" id="callLeave" title="Sair da chamada">📞</button></div></div>
   <div id="board">
@@ -531,7 +531,7 @@ $('form').addEventListener('submit', ev => {
   broadcast({ t: 'chat', name: S.name, text }); addMsg(S.name, text, true); $('msg').value = '';
 });
 
-/* Grupos locais: o link da sala é o convite compartilhável. */
+/* Grupos locais: o link da sala é o convite compartilhável.🖥️ */
 function updateGroupHeader(){
   const title = S.groupName || ('Sala ' + S.code);
   $('groupSideHead').textContent = title;
